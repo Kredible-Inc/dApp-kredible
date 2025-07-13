@@ -3,6 +3,7 @@
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { usePlatformStore } from "@/shared/stores/platformStore";
+import { usePlatformsByOwner } from "@/shared/hooks/usePlatforms";
 import PlatformSelector from "@/shared/components/PlatformSelector";
 import CreditScore from "@/shared/components/CreditScore";
 import {
@@ -25,8 +26,9 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { platforms } = useWallet();
+  const { address } = useWallet();
   const { activePlatform } = usePlatformStore();
+  const { data: platforms = [] } = usePlatformsByOwner(address);
 
   const stats = [
     {
@@ -52,7 +54,7 @@ export default function Dashboard() {
     },
     {
       title: "Plataformas",
-      value: platforms.length,
+      value: Array.isArray(platforms) ? platforms.length : 0,
       change: "",
       changeType: "neutral" as const,
       icon: Building2,

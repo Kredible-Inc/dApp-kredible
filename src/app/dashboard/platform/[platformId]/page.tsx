@@ -3,16 +3,24 @@
 import { useParams, useRouter } from "next/navigation";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { usePlatformStore } from "@/shared/stores/platformStore";
 
 export default function PlatformDashboard() {
   const params = useParams();
   const router = useRouter();
   const { platforms } = useWallet();
   const { user } = useAuth();
+  const { activePlatform, setActivePlatform } = usePlatformStore();
 
   const platformId = params.platformId as string;
 
+  // Sincronizar la plataforma activa con la URL
+  if (platformId !== activePlatform) {
+    setActivePlatform(platformId);
+  }
+
   const handleSwitchPlatform = (newPlatformId: string) => {
+    setActivePlatform(newPlatformId);
     router.push(`/dashboard/platform/${newPlatformId}`);
   };
 
@@ -95,6 +103,14 @@ export default function PlatformDashboard() {
                 Rol en {platformId}
               </label>
               <p className="text-foreground capitalize">{user?.userRole}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Plataforma Activa
+              </label>
+              <p className="text-foreground font-medium capitalize">
+                {activePlatform}
+              </p>
             </div>
           </div>
         </div>

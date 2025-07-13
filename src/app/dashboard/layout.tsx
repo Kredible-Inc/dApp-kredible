@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { usePlatformStore } from "@/shared/stores/platformStore";
+import PlatformSelector from "@/shared/components/PlatformSelector";
 
 export default function DashboardLayout({
   children,
@@ -14,6 +16,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { isConnected, platforms } = useWallet();
   const { isAuthenticated, user } = useAuth();
+  const { activePlatform, setActivePlatform } = usePlatformStore();
 
   useEffect(() => {
     // Si no está conectado, redirigir al home
@@ -31,6 +34,11 @@ export default function DashboardLayout({
         // Si no tiene acceso a esta plataforma, redirigir a /dashboard/user
         router.push("/dashboard/user");
         return;
+      }
+
+      // Sincronizar la plataforma activa con la URL
+      if (platformId !== activePlatform) {
+        setActivePlatform(platformId);
       }
     }
 
@@ -52,7 +60,15 @@ export default function DashboardLayout({
         router.push("/dashboard/user");
       }
     }
-  }, [isConnected, isAuthenticated, platforms, pathname, router]);
+  }, [
+    isConnected,
+    isAuthenticated,
+    platforms,
+    pathname,
+    router,
+    activePlatform,
+    setActivePlatform,
+  ]);
 
   // Mostrar loading mientras verifica
   if (!isConnected || !isAuthenticated) {
@@ -72,10 +88,15 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user?.name}</span>
-            <span className="text-xs text-muted-foreground">
-              {platforms.length} plataforma{platforms.length !== 1 ? "s" : ""}
-            </span>
+            <PlatformSelector />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {user?.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {platforms.length} plataforma{platforms.length !== 1 ? "s" : ""}
+              </span>
+            </div>
           </div>
         </div>
       </header>

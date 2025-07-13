@@ -1,5 +1,6 @@
 import Image from "next/image";
 import ConnectWallet from "@/shared/components/ConnectWallet";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -17,6 +18,33 @@ export default function Home() {
           height={38}
           priority
         />
+
+        <div className="text-center sm:text-left">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            dApp Kredible
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Plataforma de préstamos descentralizados con autenticación por
+            wallet
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              href="/dashboard"
+              className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center justify-center"
+            >
+              Ir al Dashboard
+            </Link>
+            <a
+              href="https://github.com/your-repo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 border border-border text-foreground font-medium rounded-lg hover:bg-accent transition-colors inline-flex items-center justify-center"
+            >
+              Ver Código
+            </a>
+          </div>
+        </div>
+
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}

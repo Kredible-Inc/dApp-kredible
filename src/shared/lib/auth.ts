@@ -36,6 +36,7 @@ export const handleWalletAuth = async (walletAddress: string) => {
       totalLent: 0,
       totalBorrowed: 0,
       reputation: 0,
+      creditScore: 500, // Default credit score
       platforms: [],
     };
 

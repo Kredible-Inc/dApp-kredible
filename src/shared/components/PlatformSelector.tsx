@@ -35,7 +35,7 @@ export default function PlatformSelector() {
 
   const handlePlatformSelect = (platformId: string) => {
     setActivePlatform(platformId);
-    router.push(`/dashboard/platform/${platformId}`);
+    router.push(`/platform/${platformId}`);
     setIsOpen(false);
   };
 

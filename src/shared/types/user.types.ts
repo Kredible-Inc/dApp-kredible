@@ -10,5 +10,6 @@ export interface User {
   totalLent: number;
   totalBorrowed: number;
   reputation: number;
+  creditScore: number;
   platforms?: string[];
 }

@@ -45,6 +45,15 @@ export default function PlatformSelector() {
     usePlatformsByOwner(address);
   const createPlatformMutation = useCreatePlatform();
 
+  // Debug logs
+  console.log("PlatformSelector - platforms data:", platforms);
+  console.log("PlatformSelector - platforms type:", typeof platforms);
+  console.log("PlatformSelector - is array:", Array.isArray(platforms));
+  console.log("PlatformSelector - platforms length:", platforms?.length);
+
+  // Extraer el array real de plataformas
+  const safePlatforms = Array.isArray(platforms?.data) ? platforms.data : [];
+
   const [formData, setFormData] = useState<CreatePlatformRequest>({
     name: "",
     description: "",
@@ -135,7 +144,10 @@ export default function PlatformSelector() {
     }));
   };
 
-  const currentPlatform = activePlatform || platforms[0]?.id || "Ninguna";
+  // Usar safePlatforms para el currentPlatform
+  const currentPlatform =
+    activePlatform ||
+    (safePlatforms.length > 0 ? safePlatforms[0]?.id : "Ninguna");
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -175,29 +187,34 @@ export default function PlatformSelector() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Cargando plataformas...
               </div>
-            ) : !Array.isArray(platforms) || platforms.length === 0 ? (
+            ) : safePlatforms.length === 0 ? (
               <div className="px-4 py-2 text-sm text-muted-foreground">
                 No hay plataformas disponibles
               </div>
             ) : (
-              platforms.map((platform) => (
-                <button
-                  key={platform.id}
-                  onClick={() => handlePlatformSelect(platform.id)}
-                  className={`w-full px-4 py-2 text-left text-sm transition-colors ${
-                    platform.id === currentPlatform
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-accent"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {platform.id === currentPlatform && (
-                      <div className="w-2 h-2 bg-current rounded-full"></div>
-                    )}
-                    <span className="capitalize">{platform.name}</span>
-                  </div>
-                </button>
-              ))
+              safePlatforms.map((platform) => {
+                console.log("PlatformSelector - rendering platform:", platform);
+                return (
+                  <button
+                    key={platform.id}
+                    onClick={() => handlePlatformSelect(platform.id)}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                      platform.id === currentPlatform
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {platform.id === currentPlatform && (
+                        <div className="w-2 h-2 bg-current rounded-full"></div>
+                      )}
+                      <span className="capitalize">
+                        {platform.name || platform.id}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
             )}
 
             {/* Separador */}

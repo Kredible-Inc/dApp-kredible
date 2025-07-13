@@ -59,7 +59,6 @@ export default function CreditScore({
     if (score >= 700) return "👍";
     if (score >= 650) return "✅";
     if (score >= 600) return "⚠️";
-    return "📉";
   };
 
   return (

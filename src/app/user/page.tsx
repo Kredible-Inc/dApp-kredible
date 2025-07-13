@@ -7,6 +7,7 @@ import CreditScore from "@/shared/components/CreditScore";
 import StatsCard from "@/shared/components/StatsCard";
 import ActivityChart from "@/shared/components/ActivityChart";
 import QuickActions from "@/shared/components/QuickActions";
+import CreatePlatformModal from "@/shared/components/modules/CreatePlatformModal";
 
 export default function UserDashboardPage() {
   const { user } = useAuth();
@@ -96,17 +97,26 @@ export default function UserDashboardPage() {
 
       {/* Plataformas */}
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">
-          Tus Plataformas ({platforms.length})
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">
+            Tus Plataformas ({platforms.length})
+          </h2>
+          <div className="flex items-center gap-2">
+            <CreatePlatformModal />
+          </div>
+        </div>
         {platforms.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">
               No tienes acceso a ninguna plataforma aún
             </p>
-            <p className="text-sm text-muted-foreground">
-              Contacta con un administrador para obtener acceso
+            <p className="text-sm text-muted-foreground mb-4">
+              Contacta con un administrador para obtener acceso o crea una nueva
+              plataforma
             </p>
+            <div className="flex justify-center">
+              <CreatePlatformModal />
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -9,14 +9,9 @@ import {
 interface WalletState {
   address: string | null;
   uid: string | null;
-  platforms: string[];
   isConnected: boolean;
   isConnecting: boolean;
-  setWallet: (data: {
-    address: string;
-    uid: string;
-    platforms: string[];
-  }) => void;
+  setWallet: (data: { address: string; uid: string }) => void;
   clearWallet: () => void;
   connect: () => Promise<void>;
   disconnect: () => void;
@@ -27,16 +22,13 @@ interface WalletState {
 export const useWalletStore = create<WalletState>((set, get) => ({
   address: null,
   uid: null,
-  platforms: [],
   isConnected: false,
   isConnecting: false,
-  setWallet: ({ address, uid, platforms }) =>
-    set({ address, uid, platforms, isConnected: true }),
+  setWallet: ({ address, uid }) => set({ address, uid, isConnected: true }),
   clearWallet: () =>
     set({
       address: null,
       uid: null,
-      platforms: [],
       isConnected: false,
       isConnecting: false,
     }),
@@ -44,6 +36,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     set({ isConnecting: true });
     try {
       await connectWallet((address: string) => {
+        console.log("Wallet conectada con dirección:", address);
         set({
           address,
           isConnected: true,
@@ -61,7 +54,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     set({
       address: null,
       uid: null,
-      platforms: [],
       isConnected: false,
       isConnecting: false,
     });
@@ -69,6 +61,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   checkConnection: async () => {
     try {
       const address = await getPublicKey();
+      console.log("checkConnection - Dirección obtenida:", address);
       if (address) {
         set({
           address,

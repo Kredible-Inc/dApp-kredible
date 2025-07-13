@@ -3,7 +3,6 @@ import { useWalletStore } from "@/shared/stores/walletStore";
 export const useWallet = () => {
   const address = useWalletStore((state) => state.address);
   const uid = useWalletStore((state) => state.uid);
-  const platforms = useWalletStore((state) => state.platforms);
   const isConnected = useWalletStore((state) => state.isConnected);
   const isConnecting = useWalletStore((state) => state.isConnecting);
   const setWallet = useWalletStore((state) => state.setWallet);
@@ -16,7 +15,6 @@ export const useWallet = () => {
   return {
     address,
     uid,
-    platforms,
     isConnected,
     isConnecting,
     setWallet,

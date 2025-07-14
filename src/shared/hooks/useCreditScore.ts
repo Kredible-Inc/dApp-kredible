@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  CreditScoreService,
-  SetScoreRequest,
-  GetScoreRequest,
+  getCreditScore,
+  setCreditScore,
 } from "@/shared/services/creditScoreService";
 
 // Query key factory
@@ -20,18 +19,17 @@ export function useCreditScore(userAddress: string | null) {
       if (!userAddress) throw new Error("User address is required");
 
       try {
-        // Intentar obtener desde el contrato primero
-        const response = await CreditScoreService.getScore({
+        // Obtener desde el contrato
+        const score = await getCreditScore(userAddress);
+        return {
           user: userAddress,
-        });
-        return response.data;
+          score: score,
+          timestamp: new Date().toISOString(),
+          source: "contract",
+        };
       } catch (error) {
-        console.log("Contract failed, trying API fallback:", error);
-
-        // Fallback a la API externa
-        const apiResponse =
-          await CreditScoreService.getScoreFromAPI(userAddress);
-        return apiResponse.data;
+        console.log("Contract failed:", error);
+        throw error;
       }
     },
     enabled: !!userAddress,
@@ -52,17 +50,19 @@ export function useSetCreditScore() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: SetScoreRequest) => {
+    mutationFn: async ({ user, score }: { user: string; score: number }) => {
       try {
-        // Intentar establecer en el contrato primero
-        const response = await CreditScoreService.setScore(data);
-        return response.data;
+        // Establecer en el contrato
+        const result = await setCreditScore(user, score);
+        return {
+          user,
+          score,
+          timestamp: new Date().toISOString(),
+          source: "contract",
+        };
       } catch (error) {
-        console.log("Contract failed, trying API fallback:", error);
-
-        // Fallback a la API externa
-        const apiResponse = await CreditScoreService.setScoreInAPI(data);
-        return apiResponse.data;
+        console.log("Contract failed:", error);
+        throw error;
       }
     },
     onSuccess: (data, variables) => {
@@ -89,26 +89,16 @@ export function useCreditScoreFromContract(userAddress: string | null) {
     queryFn: async () => {
       if (!userAddress) throw new Error("User address is required");
 
-      const response = await CreditScoreService.getScore({ user: userAddress });
-      return response.data;
+      const score = await getCreditScore(userAddress);
+      return {
+        user: userAddress,
+        score: score,
+        timestamp: new Date().toISOString(),
+        source: "contract",
+      };
     },
     enabled: !!userAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
     retry: false, // No reintentar si falla el contrato
-  });
-}
-
-// Hook para obtener el credit score desde la API (sin fallback)
-export function useCreditScoreFromAPI(userAddress: string | null) {
-  return useQuery({
-    queryKey: [...creditScoreKeys.score(userAddress || ""), "api"],
-    queryFn: async () => {
-      if (!userAddress) throw new Error("User address is required");
-
-      const response = await CreditScoreService.getScoreFromAPI(userAddress);
-      return response.data;
-    },
-    enabled: !!userAddress,
-    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }

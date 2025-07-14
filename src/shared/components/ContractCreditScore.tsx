@@ -7,6 +7,7 @@ import {
 } from "@/shared/hooks/useCreditScore";
 import CreditScore from "./CreditScore";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -15,7 +16,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import {
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  Save,
+} from "lucide-react";
 import { useState } from "react";
 
 interface ContractCreditScoreProps {
@@ -27,6 +34,7 @@ export default function ContractCreditScore({
 }: ContractCreditScoreProps) {
   const { address } = useWallet();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [newScore, setNewScore] = useState("");
 
   // Obtener el credit score del contrato/API
   const {
@@ -39,20 +47,31 @@ export default function ContractCreditScore({
   // Mutation para actualizar el credit score
   const setCreditScoreMutation = useSetCreditScore();
 
-  const handleUpdateScore = async (newScore: number) => {
+  const handleUpdateScore = async (newScoreValue: number) => {
     if (!address) return;
 
     setIsUpdating(true);
     try {
       await setCreditScoreMutation.mutateAsync({
         user: address,
-        score: newScore,
+        score: newScoreValue,
       });
+      setNewScore(""); // Limpiar input después de actualizar
     } catch (error) {
       console.error("Error updating credit score:", error);
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleSetScore = async () => {
+    const scoreValue = parseInt(newScore);
+    if (isNaN(scoreValue) || scoreValue < 400 || scoreValue > 800) {
+      alert("Por favor ingresa un score válido entre 400 y 800");
+      return;
+    }
+
+    await handleUpdateScore(scoreValue);
   };
 
   const handleRefresh = () => {
@@ -151,6 +170,34 @@ export default function ContractCreditScore({
                 ? new Date(creditScoreData.timestamp).toLocaleString()
                 : "N/A"}
             </span>
+          </div>
+
+          {/* Set Score Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Establecer nuevo score:
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder="400-800"
+                min="400"
+                max="800"
+                value={newScore}
+                onChange={(e) => setNewScore(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSetScore}
+                disabled={
+                  isUpdating || setCreditScoreMutation.isPending || !newScore
+                }
+                size="sm"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Establecer
+              </Button>
+            </div>
           </div>
 
           {/* Actions */}

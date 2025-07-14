@@ -93,4 +93,28 @@ export class ApiKeyService {
       throw error;
     }
   }
+
+  static async getApiKey(platformId: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api-keys/${platformId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // No API key found
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.apiKey || null;
+    } catch (error) {
+      console.error("Error getting API key:", error);
+      return null;
+    }
+  }
 }

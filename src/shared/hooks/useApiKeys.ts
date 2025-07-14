@@ -9,7 +9,19 @@ export const apiKeyKeys = {
   all: ["apiKeys"] as const,
   usage: () => [...apiKeyKeys.all, "usage"] as const,
   usageDetail: (apiKey: string) => [...apiKeyKeys.usage(), apiKey] as const,
+  platformKey: (platformId: string) =>
+    [...apiKeyKeys.all, "platform", platformId] as const,
 };
+
+// Hook para obtener API Key de una plataforma
+export function useApiKey(platformId: string) {
+  return useQuery({
+    queryKey: apiKeyKeys.platformKey(platformId),
+    queryFn: () => ApiKeyService.getApiKey(platformId),
+    enabled: !!platformId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
 
 // Hook para obtener uso de API con API Key
 export function useApiUsage(apiKey: string | null) {
@@ -29,6 +41,11 @@ export function useCreateApiKey() {
     mutationFn: (data: CreateApiKeyRequest) => ApiKeyService.createApiKey(data),
     onSuccess: (newApiKey, variables) => {
       console.log("API Key creada exitosamente:", newApiKey);
+
+      // Invalidar la query del API key de la plataforma
+      queryClient.invalidateQueries({
+        queryKey: apiKeyKeys.platformKey(variables.platformId),
+      });
 
       // Invalidar consultas de uso para refrescar datos
       queryClient.invalidateQueries({

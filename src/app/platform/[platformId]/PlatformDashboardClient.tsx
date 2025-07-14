@@ -5,7 +5,7 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { usePlatformStore } from "@/shared/stores/platformStore";
 import { usePlatformsByOwner } from "@/shared/hooks/usePlatforms";
-import { useApiUsage } from "@/shared/hooks/useApiKeys";
+import { useApiUsage, useApiKey } from "@/shared/hooks/useApiKeys";
 import CreateApiKeyModal from "@/shared/components/modules/CreateApiKeyModal";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -40,16 +40,18 @@ export default function PlatformDashboardClient({
   const { activePlatform } = usePlatformStore();
   const { data: platforms = [] } = usePlatformsByOwner(address);
 
-  // Estado de API Key (simulado por ahora)
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  // Obtener API Key real de la plataforma
+  const { data: apiKey, isLoading: apiKeyLoading } = useApiKey(platformId);
   const hasApiKey = !!apiKey;
 
   // Obtener datos de uso si hay API Key
-  const { data: usageData, isLoading: usageLoading } = useApiUsage(apiKey);
+  const { data: usageData, isLoading: usageLoading } = useApiUsage(
+    apiKey || null
+  );
   const usage = usageData?.data;
 
   // Extraer el array real de plataformas
-  const safePlatforms = Array.isArray(platforms?.data) ? platforms.data : [];
+  const safePlatforms = Array.isArray(platforms) ? platforms : [];
 
   // Verificar si el usuario tiene acceso a esta plataforma
   const hasAccess = safePlatforms.some(
@@ -125,7 +127,14 @@ export default function PlatformDashboardClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {hasApiKey ? (
+            {apiKeyLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span className="text-sm text-muted-foreground">
+                  Cargando API Key...
+                </span>
+              </div>
+            ) : hasApiKey ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />

@@ -24,6 +24,17 @@ export interface ApiKeyData {
   timestamp: string;
 }
 
+export interface GetApiKeyByIdResponse {
+  success: boolean;
+  data: {
+    apiKey: string;
+    platformId: string;
+    platformName: string;
+  };
+  message: string;
+  timestamp: string;
+}
+
 export interface UsageData {
   success: boolean;
   message: string;
@@ -90,6 +101,47 @@ export class ApiKeyService {
       return result;
     } catch (error) {
       console.error("Error creating API key:", error);
+      throw error;
+    }
+  }
+
+  static async getApiKeyById(
+    platformId: string
+  ): Promise<GetApiKeyByIdResponse> {
+    try {
+      console.log(
+        "ApiKeyService - Getting API key by platform ID:",
+        platformId
+      );
+
+      const response = await fetch(
+        `${API_BASE_URL}/platforms/api-key/${platformId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("ApiKeyService - Response status:", response.status);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Platform not found or API key not found");
+        }
+        const errorText = await response.text();
+        console.error("ApiKeyService - Error response:", errorText);
+        throw new Error(
+          `Error getting API key by ID: ${response.statusText} - ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("ApiKeyService - Success response:", result);
+      return result;
+    } catch (error) {
+      console.error("Error getting API key by ID:", error);
       throw error;
     }
   }

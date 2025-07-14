@@ -17,7 +17,10 @@ export const apiKeyKeys = {
 export function useApiKey(platformId: string) {
   return useQuery({
     queryKey: apiKeyKeys.platformKey(platformId),
-    queryFn: () => ApiKeyService.getApiKey(platformId),
+    queryFn: async () => {
+      const response = await ApiKeyService.getApiKeyById(platformId);
+      return response.data.apiKey;
+    },
     enabled: !!platformId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

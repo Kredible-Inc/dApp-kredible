@@ -2,8 +2,10 @@
 
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useWallet } from "@/shared/hooks/useWallet";
+import { usePlatformsByOwner } from "@/shared/hooks/usePlatforms";
 import Link from "next/link";
 import CreditScore from "@/shared/components/CreditScore";
+import ContractCreditScore from "@/shared/components/ContractCreditScore";
 import StatsCard from "@/shared/components/StatsCard";
 import ActivityChart from "@/shared/components/ActivityChart";
 import QuickActions from "@/shared/components/QuickActions";
@@ -11,7 +13,11 @@ import CreatePlatformModal from "@/shared/components/modules/CreatePlatformModal
 
 export default function UserDashboardPage() {
   const { user } = useAuth();
-  const { platforms } = useWallet();
+  const { address } = useWallet();
+  const { data: platformsData = [] } = usePlatformsByOwner(address);
+
+  // Extraer el array real de plataformas
+  const platforms = Array.isArray(platformsData) ? platformsData : [];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -59,8 +65,19 @@ export default function UserDashboardPage() {
         </div>
       </div>
 
-      {/* Credit Score */}
+      {/* Credit Score - Versión del Contrato */}
       <div className="mb-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          Credit Score desde Contrato Stellar
+        </h2>
+        <ContractCreditScore />
+      </div>
+
+      {/* Credit Score - Versión Estática */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          Credit Score Estático
+        </h2>
         <CreditScore score={user?.creditScore || 500} />
       </div>
 

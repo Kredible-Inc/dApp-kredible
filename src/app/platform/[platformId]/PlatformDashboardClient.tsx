@@ -51,7 +51,7 @@ export default function PlatformDashboardClient({
   const usage = usageData?.data;
 
   // Extraer el array real de plataformas
-  const safePlatforms = Array.isArray(platforms) ? platforms : [];
+  const safePlatforms = Array.isArray(platforms?.data) ? platforms.data : [];
 
   // Verificar si el usuario tiene acceso a esta plataforma
   const hasAccess = safePlatforms.some(

@@ -19,6 +19,10 @@ export interface PlatformResponse {
   updatedAt: string;
 }
 
+export interface PlatformListResponse {
+  data: PlatformResponse[];
+}
+
 export class PlatformService {
   static async createPlatform(
     data: CreatePlatformRequest
@@ -79,7 +83,7 @@ export class PlatformService {
 
   static async getPlatformsByOwner(
     ownerAddress: string
-  ): Promise<PlatformResponse[]> {
+  ): Promise<PlatformListResponse> {
     try {
       console.log(
         "PlatformService - Fetching platforms for owner:",

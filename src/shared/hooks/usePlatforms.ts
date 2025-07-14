@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   PlatformService,
   CreatePlatformRequest,
+  PlatformListResponse,
 } from "@/shared/services/platformService";
 import { useWallet } from "./useWallet";
 
@@ -17,7 +18,7 @@ export const platformKeys = {
 
 // Hook para obtener plataformas por owner
 export function usePlatformsByOwner(ownerAddress: string | null) {
-  return useQuery({
+  return useQuery<PlatformListResponse>({
     queryKey: platformKeys.list(ownerAddress || ""),
     queryFn: () => PlatformService.getPlatformsByOwner(ownerAddress!),
     enabled: !!ownerAddress,

@@ -4,7 +4,28 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { usePlatformStore } from "@/shared/stores/platformStore";
 import { usePlatformsByOwner } from "@/shared/hooks/usePlatforms";
+import { useApiKey } from "@/shared/hooks/useApiKeys";
+import CreateApiKeyModal from "@/shared/components/modules/CreateApiKeyModal";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Copy,
+  Key,
+  Activity,
+  TrendingUp,
+  Users,
+  CreditCard,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
 interface PlatformDashboardClientProps {
   platformId: string;
@@ -17,13 +38,18 @@ export default function PlatformDashboardClient({
   const { address } = useWallet();
   const { activePlatform } = usePlatformStore();
   const { data: platforms = [] } = usePlatformsByOwner(address);
+  const {
+    data: apiKeyData,
+    isLoading: apiKeyLoading,
+    error: apiKeyError,
+  } = useApiKey(platformId);
 
   // Extraer el array real de plataformas
   const safePlatforms = Array.isArray(platforms?.data) ? platforms.data : [];
 
   // Verificar si el usuario tiene acceso a esta plataforma
   const hasAccess = safePlatforms.some(
-    (platform) => platform.id === platformId
+    (platform: any) => platform.id === platformId
   );
 
   if (!hasAccess) {
@@ -49,8 +75,20 @@ export default function PlatformDashboardClient({
 
   // Encontrar la plataforma actual
   const currentPlatform = safePlatforms.find(
-    (platform) => platform.id === platformId
+    (platform: any) => platform.id === platformId
   );
+
+  const apiKey = apiKeyData?.data;
+  const hasApiKey = !!apiKey && !apiKeyError;
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      console.log("API Key copiada al portapapeles");
+    } catch (error) {
+      console.error("Error al copiar:", error);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -61,7 +99,7 @@ export default function PlatformDashboardClient({
               {currentPlatform?.name || `Plataforma ${platformId}`}
             </h1>
             <p className="text-muted-foreground">
-              Gestiona tus préstamos y transacciones
+              Análisis de uso de API y gestión de plataforma
             </p>
           </div>
           <Link
@@ -71,6 +109,136 @@ export default function PlatformDashboardClient({
             Cambiar Plataforma
           </Link>
         </div>
+      </div>
+
+      {/* API Key Section */}
+      <div className="mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              API Key
+            </CardTitle>
+            <CardDescription>
+              Tu clave de API para integrar con Kredible
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {apiKeyLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Activity className="h-4 w-4 animate-spin" />
+                Cargando API Key...
+              </div>
+            ) : hasApiKey ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="text-sm font-medium text-green-600">
+                    API Key Configurada
+                  </span>
+                </div>
+                <div className="bg-muted p-3 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <code className="text-sm font-mono">{apiKey?.apiKey}</code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(apiKey?.apiKey || "")}
+                      className="ml-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Usa esta clave en el header <code>X-API-Key</code> de tus
+                  requests
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-500" />
+                  <span className="text-sm font-medium text-orange-600">
+                    API Key No Configurada
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Crea una API Key para comenzar a usar la API de Kredible
+                </p>
+                <CreateApiKeyModal
+                  platformId={platformId}
+                  platformName={currentPlatform?.name || platformId}
+                  contactEmail={currentPlatform?.contactEmail || ""}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Análisis de Uso de API */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Requests Totales
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,234</div>
+            <p className="text-xs text-muted-foreground">
+              +12% desde el mes pasado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Requests Exitosos
+            </CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,198</div>
+            <p className="text-xs text-muted-foreground">97.1% tasa de éxito</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Tiempo Promedio
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">245ms</div>
+            <p className="text-xs text-muted-foreground">
+              -8% desde el mes pasado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Plan Actual</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold capitalize">
+              {currentPlatform?.planType || "Básico"}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {currentPlatform?.planType === "basic" && "1,000 requests/mes"}
+              {currentPlatform?.planType === "premium" && "10,000 requests/mes"}
+              {currentPlatform?.planType === "enterprise" &&
+                "Requests ilimitados"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Información de la plataforma */}
@@ -89,7 +257,9 @@ export default function PlatformDashboardClient({
             <label className="text-sm font-medium text-muted-foreground">
               Estado
             </label>
-            <p className="text-foreground">Activa</p>
+            <Badge variant="secondary" className="mt-1">
+              {hasApiKey ? "Activa" : "Pendiente"}
+            </Badge>
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">
@@ -99,36 +269,10 @@ export default function PlatformDashboardClient({
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">
-              Plataforma Activa
+              Email de Contacto
             </label>
-            <p className="text-foreground">
-              {activePlatform === platformId ? "Sí" : "No"}
-            </p>
+            <p className="text-foreground">{currentPlatform?.contactEmail}</p>
           </div>
-        </div>
-      </div>
-
-      {/* Estadísticas de la plataforma */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Préstamos Activos
-          </h3>
-          <p className="text-2xl font-bold text-primary">0</p>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Préstamos Completados
-          </h3>
-          <p className="text-2xl font-bold text-primary">0</p>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Reputación en Plataforma
-          </h3>
-          <p className="text-2xl font-bold text-primary">
-            {user?.reputation || "0"}
-          </p>
         </div>
       </div>
 
@@ -140,26 +284,26 @@ export default function PlatformDashboardClient({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <button className="p-4 border border-border rounded-lg hover:bg-accent transition-colors text-left">
             <h3 className="font-semibold text-foreground mb-2">
-              Solicitar Préstamo
+              Ver Documentación
             </h3>
             <p className="text-sm text-muted-foreground">
-              Crear una nueva solicitud de préstamo
+              Guías de integración y ejemplos
             </p>
           </button>
           <button className="p-4 border border-border rounded-lg hover:bg-accent transition-colors text-left">
             <h3 className="font-semibold text-foreground mb-2">
-              Ofrecer Préstamo
+              Historial de Requests
             </h3>
             <p className="text-sm text-muted-foreground">
-              Ofrecer fondos para préstamos
+              Revisar logs de API calls
             </p>
           </button>
           <button className="p-4 border border-border rounded-lg hover:bg-accent transition-colors text-left">
             <h3 className="font-semibold text-foreground mb-2">
-              Ver Historial
+              Actualizar Plan
             </h3>
             <p className="text-sm text-muted-foreground">
-              Revisar transacciones anteriores
+              Cambiar tipo de plan
             </p>
           </button>
         </div>

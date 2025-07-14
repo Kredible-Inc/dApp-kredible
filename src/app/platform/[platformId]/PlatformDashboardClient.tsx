@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useWallet } from "@/shared/hooks/useWallet";
 import { usePlatformStore } from "@/shared/stores/platformStore";
 import { usePlatformsByOwner } from "@/shared/hooks/usePlatforms";
-import { useApiKey } from "@/shared/hooks/useApiKeys";
+import { useApiUsage } from "@/shared/hooks/useApiKeys";
 import CreateApiKeyModal from "@/shared/components/modules/CreateApiKeyModal";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -38,11 +39,14 @@ export default function PlatformDashboardClient({
   const { address } = useWallet();
   const { activePlatform } = usePlatformStore();
   const { data: platforms = [] } = usePlatformsByOwner(address);
-  const {
-    data: apiKeyData,
-    isLoading: apiKeyLoading,
-    error: apiKeyError,
-  } = useApiKey(platformId);
+
+  // Estado de API Key (simulado por ahora)
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const hasApiKey = !!apiKey;
+
+  // Obtener datos de uso si hay API Key
+  const { data: usageData, isLoading: usageLoading } = useApiUsage(apiKey);
+  const usage = usageData?.data;
 
   // Extraer el array real de plataformas
   const safePlatforms = Array.isArray(platforms?.data) ? platforms.data : [];
@@ -77,9 +81,6 @@ export default function PlatformDashboardClient({
   const currentPlatform = safePlatforms.find(
     (platform: any) => platform.id === platformId
   );
-
-  const apiKey = apiKeyData?.data;
-  const hasApiKey = !!apiKey && !apiKeyError;
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -124,12 +125,7 @@ export default function PlatformDashboardClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {apiKeyLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Activity className="h-4 w-4 animate-spin" />
-                Cargando API Key...
-              </div>
-            ) : hasApiKey ? (
+            {hasApiKey ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
@@ -139,11 +135,11 @@ export default function PlatformDashboardClient({
                 </div>
                 <div className="bg-muted p-3 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono">{apiKey?.apiKey}</code>
+                    <code className="text-sm font-mono">{apiKey}</code>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(apiKey?.apiKey || "")}
+                      onClick={() => copyToClipboard(apiKey)}
                       className="ml-2"
                     >
                       <Copy className="h-4 w-4" />
@@ -182,14 +178,16 @@ export default function PlatformDashboardClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Requests Totales
+              Requests Usados
             </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">
+              {usageLoading ? "..." : usage?.usedQueries || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +12% desde el mes pasado
+              de {usage?.maxQueries || 0} disponibles
             </p>
           </CardContent>
         </Card>
@@ -197,28 +195,30 @@ export default function PlatformDashboardClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Requests Exitosos
+              Requests Restantes
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,198</div>
-            <p className="text-xs text-muted-foreground">97.1% tasa de éxito</p>
+            <div className="text-2xl font-bold">
+              {usageLoading ? "..." : usage?.remainingQueries || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              requests disponibles
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Tiempo Promedio
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Uso del Plan</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">245ms</div>
-            <p className="text-xs text-muted-foreground">
-              -8% desde el mes pasado
-            </p>
+            <div className="text-2xl font-bold">
+              {usageLoading ? "..." : usage?.usagePercentage || 0}%
+            </div>
+            <p className="text-xs text-muted-foreground">del plan utilizado</p>
           </CardContent>
         </Card>
 
@@ -229,13 +229,14 @@ export default function PlatformDashboardClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold capitalize">
-              {currentPlatform?.planType || "Básico"}
+              {usageLoading
+                ? "..."
+                : usage?.planType || currentPlatform?.planType || "Básico"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {currentPlatform?.planType === "basic" && "1,000 requests/mes"}
-              {currentPlatform?.planType === "premium" && "10,000 requests/mes"}
-              {currentPlatform?.planType === "enterprise" &&
-                "Requests ilimitados"}
+              {usage?.maxQueries
+                ? `${usage.maxQueries} requests/mes`
+                : "Plan básico"}
             </p>
           </CardContent>
         </Card>

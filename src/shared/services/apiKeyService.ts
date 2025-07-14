@@ -1,9 +1,11 @@
 const API_BASE_URL = "https://api-kredible-production.up.railway.app";
 
-export interface ApiKeyResponse {
-  apiKey: string;
-  platformId: string;
-  platformName: string;
+export interface UsageResponse {
+  planType: string;
+  maxQueries: number;
+  remainingQueries: number;
+  usedQueries: number;
+  usagePercentage: number;
 }
 
 export interface CreateApiKeyRequest {
@@ -14,24 +16,33 @@ export interface CreateApiKeyRequest {
 export interface ApiKeyData {
   success: boolean;
   message: string;
-  data: ApiKeyResponse;
+  data: {
+    apiKey: string;
+    platformId: string;
+    platformName: string;
+  };
+  timestamp: string;
+}
+
+export interface UsageData {
+  success: boolean;
+  message: string;
+  data: UsageResponse;
   timestamp: string;
 }
 
 export class ApiKeyService {
-  static async getApiKey(platformId: string): Promise<ApiKeyData> {
+  static async getUsage(apiKey: string): Promise<UsageData> {
     try {
-      console.log("ApiKeyService - Fetching API key for platform:", platformId);
+      console.log("ApiKeyService - Fetching usage with API key");
 
-      const response = await fetch(
-        `${API_BASE_URL}/platforms/${platformId}/api-key`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/platforms/usage`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+      });
 
       console.log("ApiKeyService - Response status:", response.status);
 
@@ -39,7 +50,7 @@ export class ApiKeyService {
         const errorText = await response.text();
         console.error("ApiKeyService - Error response:", errorText);
         throw new Error(
-          `Error fetching API key: ${response.statusText} - ${errorText}`
+          `Error fetching usage: ${response.statusText} - ${errorText}`
         );
       }
 
@@ -47,7 +58,7 @@ export class ApiKeyService {
       console.log("ApiKeyService - Success response:", result);
       return result;
     } catch (error) {
-      console.error("Error fetching API key:", error);
+      console.error("Error fetching usage:", error);
       throw error;
     }
   }

@@ -7,25 +7,17 @@ import {
 // Query key factory
 export const apiKeyKeys = {
   all: ["apiKeys"] as const,
-  details: () => [...apiKeyKeys.all, "detail"] as const,
-  detail: (platformId: string) =>
-    [...apiKeyKeys.details(), platformId] as const,
+  usage: () => [...apiKeyKeys.all, "usage"] as const,
+  usageDetail: (apiKey: string) => [...apiKeyKeys.usage(), apiKey] as const,
 };
 
-// Hook para obtener API Key de una plataforma
-export function useApiKey(platformId: string | null) {
+// Hook para obtener uso de API con API Key
+export function useApiUsage(apiKey: string | null) {
   return useQuery({
-    queryKey: apiKeyKeys.detail(platformId || ""),
-    queryFn: () => ApiKeyService.getApiKey(platformId!),
-    enabled: !!platformId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: (failureCount, error: any) => {
-      // No reintentar si es 404 (API key no existe)
-      if (error?.message?.includes("404")) {
-        return false;
-      }
-      return failureCount < 2;
-    },
+    queryKey: apiKeyKeys.usageDetail(apiKey || ""),
+    queryFn: () => ApiKeyService.getUsage(apiKey!),
+    enabled: !!apiKey,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -38,16 +30,10 @@ export function useCreateApiKey() {
     onSuccess: (newApiKey, variables) => {
       console.log("API Key creada exitosamente:", newApiKey);
 
-      // Invalidar y refetch las consultas de API Keys
+      // Invalidar consultas de uso para refrescar datos
       queryClient.invalidateQueries({
-        queryKey: apiKeyKeys.details(),
+        queryKey: apiKeyKeys.usage(),
       });
-
-      // Actualizar el cache directamente
-      queryClient.setQueryData(
-        apiKeyKeys.detail(variables.platformId),
-        newApiKey
-      );
     },
     onError: (error) => {
       console.error("Error al crear API Key:", error);
